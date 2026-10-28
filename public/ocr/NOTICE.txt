@@ -1,0 +1,6 @@
+Offline OCR assets
+
+Tesseract.js worker and Tesseract.js-core are distributed under the Apache License 2.0.
+Sources: https://github.com/naptha/tesseract.js and https://github.com/naptha/tesseract.js-core
+English language data: https://github.com/naptha/tessdata (4.0.0_best_int).
+See LICENSE-APACHE-2.0.txt in this folder.
