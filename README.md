@@ -24,6 +24,10 @@ python -m venv .venv
 
 After cloning, run `npm ci` and `npm run build` from the project folder before starting the app. The generated `dist` folder is not included in Git. Node is only needed when building the interface.
 
+## Library and collections
+
+Open a PDF to add its local path to the library. Use Recent, All Documents or Pinned in the sidebar; the pin icon keeps a document in the Pinned view. Use the plus beside Collections to create a collection, then select it and add documents from the library. Collections can be renamed or deleted, and a PDF can belong to more than one collection. Removing a document from a collection or deleting a collection does not remove the PDF or its reading data. The X in Recent only hides that recent entry.
+
 ## Controls
 
 - Ctrl+O: open a PDF
@@ -49,7 +53,7 @@ storage.py              SQLite history and settings service
 data/stillpage.sqlite3  Local reading history and settings
 requirements.txt        Python desktop dependency
 Start Stillpage.bat     Desktop launcher
-src/components/         PDF pages, thumbnails, outline and search
+src/components/         Library, PDF pages, thumbnails, outline and search
 src/services/pdf.ts     PDF.js loading and rendering
 src/stores/reader.ts    Transient reader state
 src/App.tsx             Shell, opening and navigation
@@ -59,5 +63,5 @@ dist/                   Built interface used by the desktop app
 
 ## Current limitations
 
-The Pages tab loads thumbnails near the sidebar viewport. Outline displays the table of contents provided by the PDF. Search extracts text incrementally, returns matching pages with snippets, and keeps extracted text in memory for the current document. It does not highlight matches on the page, and search currently uses embedded PDF text rather than OCR results. Reading history, last page and zoom are stored per file, while theme and sidebar visibility are global. Use the back arrow to return to recent documents. The X beside a recent entry hides it without deleting the PDF or its notes and marks; opening it again restores the entry. History identifies files by their path; if a file is moved or renamed, select it again as a new entry. The exact scroll offset within a page is not restored. Highlights and underlines are saved separately from the PDF using PDF page coordinates. Selection must start and end on the same page; marks are tied to the stored file path, so reselecting a moved file creates a separate history entry. Annotation placement may vary with unusual PDF text layers and has not yet been validated across all PDF layouts. Page notes, annotation notes, and bookmarks are stored in the local database. Notes save shortly after typing and when the editor loses focus; wait briefly for autosave before closing the app. Clicking marks depends on the PDF text layer. Command palette and flashcards are not implemented yet. Focus mode hides the interface without changing the OS window to fullscreen. Password-protected PDFs do not yet have a password prompt. PDF bytes remain in memory while open; canvases and text layers are rendered only near the viewport. Mixed-size pages can shift slightly as they are first measured. Very large documents need further profiling.
+The Pages tab loads thumbnails near the sidebar viewport. Outline displays the table of contents provided by the PDF. Search extracts text incrementally, returns matching pages with snippets, and keeps extracted text in memory for the current document. It does not highlight matches on the page, and search currently uses embedded PDF text rather than OCR results. Reading history, last page and zoom are stored per file, while theme and sidebar visibility are global. Use the back arrow to return to recent documents. The X beside a recent entry hides it without deleting the PDF or its notes and marks; opening it again restores the entry. History identifies files by their path; if a file is moved or renamed, select it again as a new entry. The exact scroll offset within a page is not restored. Drag-and-drop import and automatic relinking for moved files are not implemented; choose a moved file again to open it. Highlights and underlines are saved separately from the PDF using PDF page coordinates. Selection must start and end on the same page; marks are tied to the stored file path, so reselecting a moved file creates a separate history entry. Annotation placement may vary with unusual PDF text layers and has not yet been validated across all PDF layouts. Page notes, annotation notes, and bookmarks are stored in the local database. Notes save shortly after typing and when the editor loses focus; wait briefly for autosave before closing the app. Clicking marks depends on the PDF text layer. Command palette and flashcards are not implemented yet. Focus mode hides the interface without changing the OS window to fullscreen. Password-protected PDFs do not yet have a password prompt. PDF bytes remain in memory while open; canvases and text layers are rendered only near the viewport. Mixed-size pages can shift slightly as they are first measured. Very large documents need further profiling.
 

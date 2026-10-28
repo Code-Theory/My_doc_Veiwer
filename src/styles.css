@@ -15,3 +15,5 @@
 .page-content{position:absolute;left:0;top:0;transform-origin:top left}.recent-row{display:flex;align-items:center}.recent-list .recent-open{flex:1;min-width:0}.recent-list .recent-remove{width:25px;flex:none;padding:0;align-items:center;color:var(--muted)}.recent-remove:hover{color:var(--text)}
 
 .ocr-status{position:absolute;right:8px;top:8px;z-index:3;font-size:10px;color:#555;background:#fffffff0;border-radius:4px;padding:4px;opacity:0;pointer-events:none}.page-wrap:hover .ocr-status,.ocr-status:focus-within{opacity:1;pointer-events:auto}.ocr-status button{font:inherit;color:#555;border:1px solid #ddd;border-radius:3px;background:#fff;padding:3px 6px}.ocr-status button:hover{background:#eee}
+
+.virtual-pages{position:relative;width:100%;}.virtual-page{position:absolute;top:0;left:0;width:100%;display:flow-root}.virtual-thumbnails{position:relative;width:100%}.virtual-thumbnail{position:absolute;left:0;top:0;width:100%;height:198px}.virtual-thumbnail .thumbnail{height:198px;justify-content:flex-start}.page-content > canvas{width:100%!important;height:100%!important}

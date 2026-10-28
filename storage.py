@@ -27,6 +27,14 @@ class Storage:
             if not db.execute("SELECT 1 FROM migrations WHERE version=4").fetchone():
                 db.execute("ALTER TABLE documents ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
                 db.execute("INSERT INTO migrations VALUES (4)")
+            if not db.execute("SELECT 1 FROM migrations WHERE version=5").fetchone():
+                db.execute("ALTER TABLE documents ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0")
+                db.execute("ALTER TABLE documents ADD COLUMN file_size INTEGER")
+                db.execute("ALTER TABLE documents ADD COLUMN page_count INTEGER")
+                db.execute("CREATE TABLE collections (id INTEGER PRIMARY KEY, name TEXT NOT NULL COLLATE NOCASE UNIQUE, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+                db.execute("CREATE TABLE collection_documents (collection_id INTEGER NOT NULL REFERENCES collections(id) ON DELETE CASCADE, document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE, PRIMARY KEY(collection_id,document_id))")
+                db.execute("CREATE INDEX collection_documents_document ON collection_documents(document_id)")
+                db.execute("INSERT INTO migrations VALUES (5)")
 
     @contextmanager
     def connect(self):
@@ -41,7 +49,7 @@ class Storage:
 
     def touch(self, path: Path):
         with self.connect() as db:
-            db.execute("INSERT INTO documents(path,name,last_opened) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(path) DO UPDATE SET name=excluded.name,last_opened=CURRENT_TIMESTAMP,hidden=0", (str(path), path.name))
+            db.execute("INSERT INTO documents(path,name,last_opened,file_size) VALUES(?,?,CURRENT_TIMESTAMP,?) ON CONFLICT(path) DO UPDATE SET name=excluded.name,last_opened=CURRENT_TIMESTAMP,hidden=0,file_size=excluded.file_size", (str(path), path.name, path.stat().st_size))
             return dict(db.execute("SELECT * FROM documents WHERE path=?", (str(path),)).fetchone())
 
     def document(self, document_id):
@@ -144,3 +152,57 @@ class Storage:
     def delete_bookmark(self, document_id, bookmark_id):
         with self.connect() as db:
             return db.execute('DELETE FROM bookmarks WHERE id=? AND document_id=?', (int(bookmark_id),int(document_id))).rowcount > 0
+
+    def library(self):
+        with self.connect() as db:
+            documents = [dict(row) for row in db.execute('SELECT id,name,path,last_opened,page,page_count,file_size,pinned,hidden FROM documents ORDER BY last_opened DESC,id DESC')]
+            collections = [dict(row) for row in db.execute('SELECT id,name FROM collections ORDER BY name COLLATE NOCASE')]
+            links = [dict(row) for row in db.execute('SELECT collection_id,document_id FROM collection_documents')]
+            return {'documents': documents, 'collections': collections, 'links': links}
+
+    def set_pinned(self, document_id, pinned):
+        if not isinstance(pinned, bool): raise ValueError('Invalid pin state')
+        with self.connect() as db:
+            return db.execute('UPDATE documents SET pinned=? WHERE id=?', (int(pinned), int(document_id))).rowcount > 0
+
+    def set_page_count(self, document_id, page_count):
+        count=int(page_count)
+        if count < 1 or count > 1000000: raise ValueError('Invalid page count')
+        with self.connect() as db:
+            return db.execute('UPDATE documents SET page_count=? WHERE id=?', (count,int(document_id))).rowcount > 0
+
+    @staticmethod
+    def _collection_name(name):
+        if not isinstance(name,str): raise ValueError('Invalid collection name')
+        name=name.strip()
+        if not name or len(name)>100: raise ValueError('Collection name must be between 1 and 100 characters')
+        return name
+
+    def create_collection(self, name):
+        name=self._collection_name(name)
+        with self.connect() as db:
+            try:
+                cur=db.execute('INSERT INTO collections(name) VALUES(?)', (name,))
+            except sqlite3.IntegrityError as error:
+                raise ValueError('A collection with that name already exists') from error
+            return {'id':cur.lastrowid, 'name':name}
+
+    def rename_collection(self, collection_id, name):
+        name=self._collection_name(name)
+        with self.connect() as db:
+            try:
+                return db.execute('UPDATE collections SET name=? WHERE id=?', (name,int(collection_id))).rowcount > 0
+            except sqlite3.IntegrityError as error:
+                raise ValueError('A collection with that name already exists') from error
+
+    def delete_collection(self, collection_id):
+        with self.connect() as db:
+            return db.execute('DELETE FROM collections WHERE id=?', (int(collection_id),)).rowcount > 0
+
+    def set_collection_document(self, collection_id, document_id, included):
+        if not isinstance(included,bool): raise ValueError('Invalid membership')
+        with self.connect() as db:
+            if included:
+                db.execute('INSERT INTO collection_documents(collection_id,document_id) VALUES(?,?) ON CONFLICT(collection_id,document_id) DO NOTHING', (int(collection_id),int(document_id)))
+            else:
+                db.execute('DELETE FROM collection_documents WHERE collection_id=? AND document_id=?', (int(collection_id),int(document_id)))

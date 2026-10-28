@@ -47,6 +47,27 @@ class ReaderAPI:
     def recent(self):
         return self._storage.recent()
 
+    def library(self):
+        return self._storage.library()
+
+    def set_pinned(self, document_id, pinned):
+        return self._storage.set_pinned(document_id, pinned)
+
+    def set_page_count(self, document_id, count):
+        return self._storage.set_page_count(document_id, count)
+
+    def create_collection(self, name):
+        return self._storage.create_collection(name)
+
+    def rename_collection(self, collection_id, name):
+        return self._storage.rename_collection(collection_id, name)
+
+    def delete_collection(self, collection_id):
+        return self._storage.delete_collection(collection_id)
+
+    def set_collection_document(self, collection_id, document_id, included):
+        return self._storage.set_collection_document(collection_id, document_id, included)
+
     def hide_recent(self, document_id):
         return self._storage.hide_recent(document_id)
 
@@ -121,7 +142,7 @@ def main():
     server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
     Thread(target=server.serve_forever, daemon=True).start()
     try:
-        api._window = webview.create_window('Stillpage', f'http://127.0.0.1:{server.server_port}/', js_api=api, width=1280, height=820, min_size=(720, 500))
+        api._window = webview.create_window('Stillpage', f'http://127.0.0.1:{server.server_port}/', js_api=api, text_select=True, width=1280, height=820, min_size=(720, 500))
         webview.start(gui='edgechromium')
     finally:
         server.shutdown()
